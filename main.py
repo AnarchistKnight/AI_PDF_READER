@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     # 添加命令行参数
     parser.add_argument('--start_page', type=int, default=18)
-    parser.add_argument('--summary_paragraph_num', type=int, default=4)
+    parser.add_argument('--summary_paragraph_num', type=int, default=8)
     parser.add_argument('--summary_length', type=int, default=150)
     parser.add_argument('--model_name', type=str, default="glm4:9b")
     parser.add_argument('--line_length', type=int, default=60)
@@ -39,3 +39,4 @@ if __name__ == "__main__":
             print("=" * 15, title, "=" * 15)
             print_with_line_length(summary, args.line_length)
             paragraphs_record = []
+            print("")

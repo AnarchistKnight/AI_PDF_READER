@@ -47,3 +47,8 @@ def print_with_line_length(text, line_length):
     # 遍历文本并按指定的行长打印
     for i in range(0, len(text), line_length):
         print(text[i: i + line_length])
+
+
+def replace_multiple_spaces_with_one(text):
+    # 使用正则表达式将多个空格替换成单个空格
+    return re.sub(r'\s+', ' ', text)

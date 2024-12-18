@@ -1,5 +1,5 @@
 import ollama
-from utils import filter_english_and_punctuation
+from utils import replace_multiple_spaces_with_one
 MODEL_CARDS = ["glm4:9b",
                "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder:7b", "qwen2.5-coder:14b",
                "deepseek-coder-v2:16b"]
@@ -27,16 +27,16 @@ class LanguageProcessor:
     def summarize(self, paragraph_list, summary_length):
         message_history = []
         prompt = (f"In the next turn of conversation, you will be given a few paragraphs. You are supposed "
-                  f"to write a {summary_length}-word summary about them, in simplified Chinese. The summary "
-                  f"must be clear, explicit, easily-understood, fluent and smooth.")
+                  f"to write a summary about them within {summary_length} words. The language must be simplified "
+                  f"Chinese. The summary must be clear, explicit, easily-understood, fluent and smooth.")
         self.llm(prompt, message_history)
-        text = ("I want to emphasize again, your returned summary must be in simplified Chinese. "
-                "The paragraphs are as follows:")
+        text = (f"I want to emphasize again, your returned summary must be in simplified Chinese, within "
+                f"{summary_length} words. The paragraphs are as follows:")
         for item in paragraph_list:
             paragraph = item["paragraph"]
             text += "\n " + paragraph
         summary = self.llm(text, message_history)
-        # summary = filter_english_and_punctuation(summary)
+        summary = replace_multiple_spaces_with_one(summary)
         return summary
 
     def translate(self, text):
