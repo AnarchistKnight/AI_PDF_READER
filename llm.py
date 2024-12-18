@@ -15,7 +15,7 @@ class OllamaLLM:
         ollama_response = ollama.chat(model=self.model_name, messages=message_history)
         # Printing out of the generated response
         output_text = ollama_response['message']['content']
-        output_text = output_text.replace("\n", " ")
+        output_text = output_text.replace("\n", "")
         message_history.append([{'role': "assistant", 'content': output_text}])
         return output_text
 
