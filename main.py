@@ -23,20 +23,25 @@ if __name__ == "__main__":
     pdf_path = 'THE COMING WAVE.pdf'  # 替换成你的 PDF 文件路径
     paragraphs = extract_paragraphs_with_page_breaks(pdf_path, start_page=args.start_page)
 
-    paragraphs_record = []
+    paragraph_record = []
+    paragraph_indices = []
     # 输出提取的段落
     for overall_idx, para in enumerate(paragraphs):
-        paragraphs_record.append(para)
-        if len(paragraphs_record) >= args.summary_paragraph_num:
-            summary = language_unit.summarize(paragraphs_record, args.summary_length)
+        paragraph_record.append(para)
+        paragraph_indices.append(overall_idx)
+        if len(paragraph_record) >= args.summary_paragraph_num:
+            summary = language_unit.summarize(paragraph_record, args.summary_length)
             input("press any key to continue")
-            first_para_page_index = paragraphs_record[0]["page index"]
-            first_para_block_index = paragraphs_record[0]["block index"]
-            last_para_page_index = paragraphs_record[-1]["page index"]
-            last_para_block_index = paragraphs_record[-1]["block index"]
-            title = (f"summary from page {first_para_page_index} block {first_para_block_index}    "
-                     f"to page {last_para_page_index} block {last_para_block_index}")
+            first_para_page_idx = paragraph_record[0]["page index"]
+            first_para_block_idx = paragraph_record[0]["block index"]
+            last_para_page_idx = paragraph_record[-1]["page index"]
+            last_para_block_idx = paragraph_record[-1]["block index"]
+            min_para_idx = paragraph_indices[0]
+            max_para_idx = paragraph_indices[-1]
+            title = (f"summary ---- page {first_para_page_idx} block {first_para_block_idx} para {min_para_idx} ---- "
+                     f"to page {last_para_page_idx} block {last_para_block_idx} para {max_para_idx}")
             print("=" * 15, title, "=" * 15)
             print_with_line_length(summary, args.line_length)
-            paragraphs_record = []
+            paragraph_record = []
+            paragraph_indices = []
             print("")

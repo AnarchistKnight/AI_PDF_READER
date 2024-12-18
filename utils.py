@@ -35,7 +35,7 @@ def extract_paragraphs_with_page_breaks(pdf_path, start_page):
             paragraph += text
 
             if paragraph.endswith("."):
-                paragraph_list.append({"page index": page_index,
+                paragraph_list.append({"page index": page_index + 1,
                                        "block index": block_index,
                                        "paragraph": paragraph})
                 paragraph = ""

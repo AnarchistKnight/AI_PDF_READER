@@ -11,12 +11,12 @@ class OllamaLLM:
 
     def __call__(self, input_text, message_history):
         # Setting up the model, enabling streaming responses, and defining the input messages
-        message_history = [{'role': "user", 'content': input_text}]
+        message_history.append({'role': "user", 'content': input_text})
         ollama_response = ollama.chat(model=self.model_name, messages=message_history)
         # Printing out of the generated response
         output_text = ollama_response['message']['content']
         output_text = output_text.replace("\n", "")
-        message_history.append([{'role': "assistant", 'content': output_text}])
+        message_history.append({'role': "assistant", 'content': output_text})
         return output_text
 
 
@@ -26,12 +26,17 @@ class LanguageProcessor:
 
     def summarize(self, paragraph_list, summary_length):
         message_history = []
-        prompt = (f"In the next turn of conversation, you will be given a few paragraphs. You are supposed "
-                  f"to write a summary about them within {summary_length} words. The language must be simplified "
-                  f"Chinese. The summary must be clear, explicit, easily-understood, fluent and smooth.")
+        prompt = ("In the next turn of conversation, you will be given a few paragraphs of an article. You are "
+                  "supposed to write a summary of them.")
         self.llm(prompt, message_history)
-        text = (f"I want to emphasize again, your returned summary must be in simplified Chinese, within "
-                f"{summary_length} words. The paragraphs are as follows:")
+        requirements = f"""
+        1. The summary must be strictly within {summary_length} words.\n
+        2. The language of the summary must be simplified Chinese.\n
+        3. The summary must be clear, explicit, easily-understood, fluent and smooth.\n
+        """
+        text = f"""Your summary must strictly follow the requirements below: \n
+        {requirements}
+        The paragraphs from an article are as follows:"""
         for item in paragraph_list:
             paragraph = item["paragraph"]
             text += "\n " + paragraph
