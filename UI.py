@@ -1,6 +1,6 @@
 import sys
 import fitz  # PyMuPDF
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit,
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit, QLabel,
                              QFileDialog, QVBoxLayout, QWidget, QHBoxLayout)
 from PyQt6.QtCore import Qt
 import re
@@ -65,43 +65,86 @@ class PDFViewer(QMainWindow):
         self.llm = OllamaLLM(model_name=model_name)
         self.language_unit = LanguageProcessor(self.llm)
 
-        self.setWindowTitle("PDF 阅读器")
-        self.setGeometry(100, 100, 1600, 900)
+        self.setWindowTitle("The Coming Wave")
+        self.setGeometry(50, 50, 1800, 900)
 
-        self.english_line_width = 550
-        self.chinese_line_width = 450
-        self.summary_line_width = 600
+        self.english_line_width = 700
+        self.chinese_line_width = 600
+        self.chat_line_width = 500
         self.current_page = FIRST_PAGE
         self.document_text = DocumentText()
 
+        self.summary_length = 300
         # 创建主布局
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
 
         text_display_layout = QHBoxLayout()
-        # 创建文本编辑器
+
+        # 英文窗口
+        english_text_display_layout = QVBoxLayout()
+        english_text_display_title = QLabel("英文原文")
+        english_text_display_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        english_text_display_layout.addWidget(english_text_display_title)
         self.english_text_display = QTextEdit(self)
         self.english_text_display.setReadOnly(True)
         self.english_text_display.setFixedWidth(self.english_line_width)
         self.english_text_display.setFontPointSize(13)
-        text_display_layout.addWidget(self.english_text_display)
-        text_display_layout.setAlignment(self.english_text_display, Qt.AlignmentFlag.AlignLeft)
+        english_text_display_layout.addWidget(self.english_text_display)
+        text_display_layout.addLayout(english_text_display_layout)
+        text_display_layout.setAlignment(english_text_display_layout, Qt.AlignmentFlag.AlignLeft)
 
+        # 中文窗口
+        chinese_text_display_layout = QVBoxLayout()
+        chinese_text_display_title = QLabel("中文翻译")
+        chinese_text_display_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chinese_text_display_layout.addWidget(chinese_text_display_title)
         self.chinese_text_display = QTextEdit(self)
         self.chinese_text_display.setReadOnly(True)
         self.chinese_text_display.setFixedWidth(self.chinese_line_width)
         self.chinese_text_display.setFontPointSize(13)
-        text_display_layout.addWidget(self.chinese_text_display)
-        text_display_layout.setAlignment(self.chinese_text_display, Qt.AlignmentFlag.AlignLeft)
+        self.chinese_text_display.setMinimumHeight(500)
+        chinese_text_display_layout.addWidget(self.chinese_text_display)
 
+        summary_text_display_title = QLabel("中文总结")
+        summary_text_display_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chinese_text_display_layout.addWidget(summary_text_display_title)
         self.summary_text_display = QTextEdit(self)
         self.summary_text_display.setReadOnly(True)
-        self.summary_text_display.setFixedWidth(self.summary_line_width)
-        self.summary_text_display.setFontPointSize(14)
-        text_display_layout.addWidget(self.summary_text_display)
-        text_display_layout.setAlignment(self.summary_text_display, Qt.AlignmentFlag.AlignLeft)
+        self.summary_text_display.setFixedWidth(self.chinese_line_width)
+        self.summary_text_display.setFontPointSize(13)
+        self.summary_text_display.setMinimumHeight(250)
+        chinese_text_display_layout.addWidget(self.summary_text_display)
+        text_display_layout.addLayout(chinese_text_display_layout)
+        text_display_layout.setAlignment(chinese_text_display_layout, Qt.AlignmentFlag.AlignLeft)
 
+        # 聊天窗口
+        chat_layout = QVBoxLayout()
+        chat_display_title = QLabel("对话记录")
+        chat_display_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chat_layout.addWidget(chat_display_title)
+        self.chat_display = QTextEdit(self)
+        self.chat_display.setReadOnly(True)
+        self.chat_display.setFixedWidth(self.chat_line_width)
+        self.chat_display.setFontPointSize(13)
+        self.chat_display.setMinimumHeight(500)
+        chat_layout.addWidget(self.chat_display)
+        chat_input_title = QLabel("输入")
+        chat_input_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chat_layout.addWidget(chat_input_title)
+        self.chat_input = QTextEdit(self)
+        self.chat_input.setFixedWidth(self.chat_line_width)
+        self.chat_input.setFontPointSize(13)
+        self.chat_input.setMinimumHeight(250)
+        chat_layout.addWidget(self.chat_input)
+        self.chat_input_button = QPushButton("发送", self)
+        chat_layout.addWidget(self.chat_input_button)
+        self.chat_input_button.setMinimumHeight(40)
+        text_display_layout.addLayout(chat_layout)
+        text_display_layout.setAlignment(chat_layout, Qt.AlignmentFlag.AlignLeft)
+
+        # 设置文本窗口布局
         self.layout.addLayout(text_display_layout)
 
         # 创建按钮布局
@@ -116,12 +159,14 @@ class PDFViewer(QMainWindow):
         self.first_page_button.clicked.connect(self.show_first_page)
         self.prev_button.clicked.connect(self.show_prev_page)
         self.translate_button.clicked.connect(self.show_translated_page)
+        self.summary_button.clicked.connect(self.show_summary_page)
         self.next_button.clicked.connect(self.show_next_page)
         self.last_page_button.clicked.connect(self.show_last_page)
 
         self.button_layout.addWidget(self.first_page_button)
         self.button_layout.addWidget(self.prev_button)
         self.button_layout.addWidget(self.translate_button)
+        self.button_layout.addWidget(self.summary_button)
         self.button_layout.addWidget(self.next_button)
         self.button_layout.addWidget(self.last_page_button)
 
@@ -129,10 +174,13 @@ class PDFViewer(QMainWindow):
         self.show_page(self.current_page)
 
         self.translated = False
+        self.summarized = False
 
-    def reset_chinese_text_display(self):
+    def reset_auxiliary_displays(self):
         self.translated = False
         self.chinese_text_display.clear()
+        self.summarized = False
+        self.summary_text_display.clear()
 
     def show_page(self, page_number):
         blocks = self.document_text[page_number]  # 提取文本内容
@@ -149,7 +197,7 @@ class PDFViewer(QMainWindow):
         if self.current_page != FIRST_PAGE:
             self.current_page = FIRST_PAGE
             self.show_page(self.current_page)
-            self.reset_chinese_text_display()
+            self.reset_auxiliary_displays()
 
     def show_translated_page(self):
         if not self.translated:
@@ -160,25 +208,29 @@ class PDFViewer(QMainWindow):
             self.translated = True
 
     def show_summary_page(self):
-        return
+        if not self.summarized:
+            page_paragraphs = self.document_text[self.current_page]
+            summary = self.language_unit.summarize(page_paragraphs, self.summary_length)
+            self.summary_text_display.setText(summary)
+            self.summarized = True
 
     def show_prev_page(self):
         if self.current_page > FIRST_PAGE:
             self.current_page -= 1
             self.show_page(self.current_page)
-            self.reset_chinese_text_display()
+            self.reset_auxiliary_displays()
 
     def show_next_page(self):
         if self.current_page < LAST_PAGE:
             self.current_page += 1
             self.show_page(self.current_page)
-            self.reset_chinese_text_display()
+            self.reset_auxiliary_displays()
 
     def show_last_page(self):
         if self.current_page != LAST_PAGE:
             self.current_page = LAST_PAGE
             self.show_page(self.current_page)
-            self.reset_chinese_text_display()
+            self.reset_auxiliary_displays()
 
 
 if __name__ == "__main__":

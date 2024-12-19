@@ -23,6 +23,11 @@ class OllamaLLM:
 class LanguageProcessor:
     def __init__(self, llm):
         self.llm = llm
+        self.long_term_history = []
+
+    def chat(self, input_text):
+        output_text = self.llm(input_text, self.long_term_history)
+        return output_text
 
     def summarize(self, paragraph_list, summary_length):
         message_history = []
@@ -38,7 +43,7 @@ class LanguageProcessor:
         {requirements}
         The paragraphs from an article are as follows:"""
         for item in paragraph_list:
-            paragraph = item["paragraph"]
+            paragraph = item["paragraph"] if type(item)==dict else item
             text += "\n " + paragraph
         summary = self.llm(text, message_history)
         summary = replace_multiple_spaces_with_one(summary)
