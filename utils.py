@@ -4,7 +4,7 @@ import re
 
 def filter_english_and_punctuation(text):
     # 定义正则表达式，匹配英文字符和常见英文标点
-    pattern = r'[a-zA-Z.,!?; :"(){}\[\]\'"]+'
+    pattern = r'[a-zA-Z0-9.,!?;:(){}\[\]\'\"\- ]+'
 
     # 使用 re.findall() 来提取匹配的字符
     filtered_text = ''.join(re.findall(pattern, text))

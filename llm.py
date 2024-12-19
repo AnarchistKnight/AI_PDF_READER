@@ -44,5 +44,16 @@ class LanguageProcessor:
         summary = replace_multiple_spaces_with_one(summary)
         return summary
 
-    def translate(self, text):
-        return
+    def translate(self, text_english):
+        message_history = []
+        requirements = f"""
+                1. The translation into simplified Chinese must be easily understood.\n
+                2. Only output the translated text. Extra information is unwanted.\n
+                """
+        prompt = (f"In the next turn of conversation, you will be given a piece of text in English. You are "
+                  f"supposed to translate it into simplified Chinese. And you must follow the requirements as "
+                  f"follows: \n {requirements}")
+        self.llm(prompt, message_history)
+        content = f"The text in English is as follows: \n {text_english}"
+        text_chinese = self.llm(content, message_history)
+        return text_chinese
