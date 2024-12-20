@@ -6,3 +6,4 @@ pip install pymupdf
 pip install Pillow
 pip install screeninfo
 pip install pyqt6
+pip install tqdm

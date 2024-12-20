@@ -7,11 +7,14 @@ import re
 from utils import filter_english_and_punctuation
 from llm import OllamaLLM, LanguageProcessor
 import os
+from tqdm import tqdm
+import json
 
 
 FIRST_PAGE = 15
 LAST_PAGE = 306
 FILE_PATH = "THE COMING WAVE.pdf"
+PROCESSED_TEXT_PATH = "processed_texts.json"
 
 
 def is_valid_string(s):
@@ -22,18 +25,27 @@ def is_valid_string(s):
     return bool(re.fullmatch(pattern, s))
 
 
-class PageText:
-    def __init__(self, page_index, page):
-        return
+def save_json(data, path):
+    with open(path, "w") as f:
+        json.dump(data, f)
+
+
+def load_json(path):
+    with open(path, "r") as f:
+        return json.load(f)
 
 
 class DocumentText:
     def __init__(self):
         self.paragraphs = [[] for _ in range(LAST_PAGE + 1)]
-        self.setup()
-
-    def __getitem__(self, index):
-        return self.paragraphs[index]
+        self.translated_paragraphs = [[] for _ in range(LAST_PAGE + 1)]
+        self.page_summary_100 = ["" for _ in range(LAST_PAGE + 1)]
+        self.page_summary_200 = ["" for _ in range(LAST_PAGE + 1)]
+        self.page_summary_300 = ["" for _ in range(LAST_PAGE + 1)]
+        if os.path.exists(PROCESSED_TEXT_PATH):
+            self.load()
+        else:
+            self.setup()
 
     def setup(self):
         pdf_document = fitz.open(FILE_PATH)
@@ -57,13 +69,45 @@ class DocumentText:
                 self.paragraphs[page_index].append(paragraph)
                 paragraph = ""
 
+    def preprocess(self, language_unit):
+        for page_index in tqdm(range(LAST_PAGE + 1)):
+            for paragraph_english in self.paragraphs[page_index]:
+                paragraph_chinese = language_unit.translate(paragraph_english)
+                self.translated_paragraphs[page_index].append(paragraph_chinese)
+            if len(self.paragraphs[page_index]) > 0:
+                summary_100 = language_unit.summarize(self.paragraphs[page_index], 100)
+                self.page_summary_100[page_index] = summary_100
+                summary_200 = language_unit.summarize(self.paragraphs[page_index], 200)
+                self.page_summary_200[page_index] = summary_200
+                summary_300 = language_unit.summarize(self.paragraphs[page_index], 300)
+                self.page_summary_300[page_index] = summary_300
+                self.save()
+
+    def save(self):
+        data = {
+            "English": self.paragraphs,
+            "Chinese": self.translated_paragraphs,
+            "100-word summary": self.page_summary_100,
+            "200-word summary": self.page_summary_200,
+            "300-word summary": self.page_summary_300,
+        }
+        save_json(data, PROCESSED_TEXT_PATH)
+
+    def load(self):
+        data = load_json(PROCESSED_TEXT_PATH)
+        self.paragraphs = data["English"]
+        self.translated_paragraphs = data["Chinese"]
+        self.page_summary_100 = data["100-word summary"]
+        self.page_summary_200 = data["200-word summary"]
+        self.page_summary_300 = data["300-word summary"]
+
 
 class PDFViewer(QMainWindow):
     def __init__(self, model_name):
         super().__init__()
         os.system(f"ollama pull {model_name}")
-        self.llm = OllamaLLM(model_name=model_name)
-        self.language_unit = LanguageProcessor(self.llm)
+        llm = OllamaLLM(model_name=model_name)
+        self.language_unit = LanguageProcessor(llm)
 
         self.setWindowTitle("The Coming Wave")
         self.setGeometry(50, 50, 1800, 900)
@@ -139,8 +183,8 @@ class PDFViewer(QMainWindow):
         self.chat_input.setMinimumHeight(250)
         chat_layout.addWidget(self.chat_input)
         self.chat_input_button = QPushButton("发送", self)
-        chat_layout.addWidget(self.chat_input_button)
         self.chat_input_button.setMinimumHeight(40)
+        chat_layout.addWidget(self.chat_input_button)
         text_display_layout.addLayout(chat_layout)
         text_display_layout.setAlignment(chat_layout, Qt.AlignmentFlag.AlignLeft)
 
@@ -151,86 +195,53 @@ class PDFViewer(QMainWindow):
         self.button_layout = QHBoxLayout()
         self.first_page_button = QPushButton("第一页", self)
         self.prev_button = QPushButton("上一页", self)
-        self.translate_button = QPushButton("翻译", self)
-        self.summary_button = QPushButton("总结", self)
         self.next_button = QPushButton("下一页", self)
         self.last_page_button = QPushButton("最后一页", self)
 
         self.first_page_button.clicked.connect(self.show_first_page)
         self.prev_button.clicked.connect(self.show_prev_page)
-        self.translate_button.clicked.connect(self.show_translated_page)
-        self.summary_button.clicked.connect(self.show_summary_page)
         self.next_button.clicked.connect(self.show_next_page)
         self.last_page_button.clicked.connect(self.show_last_page)
 
         self.button_layout.addWidget(self.first_page_button)
         self.button_layout.addWidget(self.prev_button)
-        self.button_layout.addWidget(self.translate_button)
-        self.button_layout.addWidget(self.summary_button)
         self.button_layout.addWidget(self.next_button)
         self.button_layout.addWidget(self.last_page_button)
 
         self.layout.addLayout(self.button_layout)
         self.show_page(self.current_page)
 
-        self.translated = False
-        self.summarized = False
+    def chat(self):
+        return
 
-    def reset_auxiliary_displays(self):
-        self.translated = False
-        self.chinese_text_display.clear()
-        self.summarized = False
-        self.summary_text_display.clear()
-
-    def show_page(self, page_number):
-        blocks = self.document_text[page_number]  # 提取文本内容
-        self.render_page(blocks)
-
-    def render_page(self, blocks):
-        # 清除文本编辑器
+    def show_page(self, page_index):
         self.english_text_display.clear()
-        # 绘制文本
-        for block in blocks:
+        for block in self.document_text.paragraphs[page_index]:
             self.english_text_display.append(block + "\n")
+        self.chinese_text_display.clear()
+        for block in self.document_text.translated_paragraphs[page_index]:
+            self.chinese_text_display.append(block + "\n")
+        self.summary_text_display.setText(self.document_text.page_summary_200[page_index])
 
     def show_first_page(self):
         if self.current_page != FIRST_PAGE:
             self.current_page = FIRST_PAGE
             self.show_page(self.current_page)
-            self.reset_auxiliary_displays()
-
-    def show_translated_page(self):
-        if not self.translated:
-            page_paragraphs = self.document_text[self.current_page]
-            for paragraph_english in page_paragraphs:
-                paragraph_chinese = self.language_unit.translate(paragraph_english)
-                self.chinese_text_display.append(paragraph_chinese + "\n")
-            self.translated = True
-
-    def show_summary_page(self):
-        if not self.summarized:
-            page_paragraphs = self.document_text[self.current_page]
-            summary = self.language_unit.summarize(page_paragraphs, self.summary_length)
-            self.summary_text_display.setText(summary)
-            self.summarized = True
 
     def show_prev_page(self):
         if self.current_page > FIRST_PAGE:
             self.current_page -= 1
             self.show_page(self.current_page)
-            self.reset_auxiliary_displays()
 
     def show_next_page(self):
         if self.current_page < LAST_PAGE:
             self.current_page += 1
             self.show_page(self.current_page)
-            self.reset_auxiliary_displays()
 
     def show_last_page(self):
         if self.current_page != LAST_PAGE:
             self.current_page = LAST_PAGE
             self.show_page(self.current_page)
-            self.reset_auxiliary_displays()
 
 
 if __name__ == "__main__":
@@ -238,7 +249,10 @@ if __name__ == "__main__":
     viewer = PDFViewer(model_name="glm4:9b")
     viewer.show()
     sys.exit(app.exec())
-    # x = DocumentText()
+    # llm = OllamaLLM(model_name="glm4:9b")
+    # language_unit = LanguageProcessor(llm)
+    # doc = DocumentText(language_unit)
+    # doc.preprocess()
     # p = x.paragraphs[:10]
     # from IPython import embed
     # embed()
