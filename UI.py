@@ -1,7 +1,7 @@
 import sys
 import fitz  # PyMuPDF
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit, QLabel,
-                             QFileDialog, QVBoxLayout, QWidget, QHBoxLayout)
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit, QLabel, QVBoxLayout,
+                             QWidget, QHBoxLayout, QLineEdit)
 from PyQt6.QtCore import Qt
 import re
 from utils import filter_english_and_punctuation
@@ -46,6 +46,9 @@ class DocumentText:
             self.load()
         else:
             self.setup()
+
+    def is_empty_page(self, page_index):
+        return len(self.paragraphs[page_index]) == 0
 
     def setup(self):
         pdf_document = fitz.open(FILE_PATH)
@@ -178,11 +181,13 @@ class PDFViewer(QMainWindow):
         chat_input_title.setStyleSheet("font-size: 20px; font-weight: bold;")
         chat_layout.addWidget(chat_input_title)
         self.chat_input = QTextEdit(self)
+        self.chat_input.setPlaceholderText("输入消息...")
         self.chat_input.setFixedWidth(self.chat_line_width)
-        self.chat_input.setFontPointSize(13)
+        # self.chat_input.setFontPointSize(13)
         self.chat_input.setMinimumHeight(250)
         chat_layout.addWidget(self.chat_input)
         self.chat_input_button = QPushButton("发送", self)
+        self.chat_input_button.clicked.connect(self.chat)
         self.chat_input_button.setMinimumHeight(40)
         chat_layout.addWidget(self.chat_input_button)
         text_display_layout.addLayout(chat_layout)
@@ -212,7 +217,12 @@ class PDFViewer(QMainWindow):
         self.show_page(self.current_page)
 
     def chat(self):
-        return
+        message = self.chat_input.toPlainText().strip()
+        if message:
+            self.chat_display.append(f'<span style="color: red;">你</span>: {message}')
+            self.chat_input.clear()
+            reply = self.language_unit.chat(message)
+            self.chat_display.append(f'<span style="color: blue;">AI</span>: {reply}')
 
     def show_page(self, page_index):
         self.english_text_display.clear()
@@ -231,11 +241,15 @@ class PDFViewer(QMainWindow):
     def show_prev_page(self):
         if self.current_page > FIRST_PAGE:
             self.current_page -= 1
+            while self.document_text.is_empty_page(self.current_page) and self.current_page > FIRST_PAGE:
+                self.current_page -= 1
             self.show_page(self.current_page)
 
     def show_next_page(self):
         if self.current_page < LAST_PAGE:
             self.current_page += 1
+            while self.document_text.is_empty_page(self.current_page) and self.current_page < LAST_PAGE:
+                self.current_page += 1
             self.show_page(self.current_page)
 
     def show_last_page(self):

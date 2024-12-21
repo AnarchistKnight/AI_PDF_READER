@@ -26,6 +26,7 @@ class LanguageProcessor:
         self.long_term_history = []
 
     def chat(self, input_text):
+        input_text = input_text + "\n\n" + "请在一百字以内做出回复。"
         output_text = self.llm(input_text, self.long_term_history)
         return output_text
 
