@@ -13,15 +13,17 @@ git clone https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave.git
 6. 在 terminal 中直接运行 [bash install.sh](https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave/blob/56b829348c31c1920c2bc5955c9a2a931e6015b9/install.sh) 或逐个键入以下命令
 ```
 python.exe -m pip install --upgrade pip
-pip install setuptools
-pip install ollama
-pip install pymupdf
-pip install Pillow
-pip install screeninfo
-pip install pyqt6
-pip install tqdm
-pip install psutil
-pip install gputil
+# python --version 3.12.4
+# pip --version 24.3.1
+pip install setuptools==75.6.0
+pip install ollama==0.4.4
+pip install pymupdf==1.25.1
+pip install Pillow==11.0.0
+pip install screeninfo==0.8.1
+pip install pyqt6==6.8.0
+pip install tqdm==4.67.1
+pip install psutil==6.1.1
+pip install gputil==6.1.1
 ```
 5. terminal 输入 ollama serve 开启 ollama
 6. 另开一个 terminal 输入以下之一，请根据显卡显存大小选择模型
