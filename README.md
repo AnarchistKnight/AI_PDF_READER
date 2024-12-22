@@ -25,7 +25,7 @@ pip install tqdm==4.67.1
 pip install psutil==6.1.1
 pip install gputil==6.1.1
 ```
-5. terminal 输入 ollama serve 开启 ollama
+5. terminal 输入 `ollama serve` 开启 ollama
 6. 另开一个 terminal 输入以下之一，请根据显卡显存大小选择模型
 ```
 ollama pull glm4:9b                     # 5.5 GB 
