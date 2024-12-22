@@ -1,4 +1,4 @@
-本项目为专门适配 [《The Comming Wave》](https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave/blob/4c820c8ea4aaa2682cedf4a3df50099248332ba1/THE%20COMING%20WAVE.pdf})的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对**全书**或**当前阅读页**直接提问。
+本项目为专门适配 [《The Comming Wave》](https://ia801201.us.archive.org/21/items/the-coming-wave-by-mustafa-suleyman-michael-bhaskar-pdfread.net/The%20Coming%20Wave%20By%20Mustafa%20SuleymanMichael%20Bhaskar-pdfread.net.pdf)的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对**全书**或**当前阅读页**直接提问。
 
 ## 使用示例
 ![image](https://github.com/user-attachments/assets/2d51e7cd-0826-4f6d-8074-0a4083e22e50)
