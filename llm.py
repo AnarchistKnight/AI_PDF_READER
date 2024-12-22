@@ -23,7 +23,9 @@ class OllamaLLM:
 class LanguageProcessor:
     def __init__(self, llm):
         self.llm = llm
-        self.long_term_history = []
+        content = ("You are an AI assistant to help reader read the book <<THE COMING WAVE>> written "
+                   "by Mustafa Suleymam, a cofounder of DeepMind.")
+        self.long_term_history = [{'role': 'system', 'content': content}]
 
     def chat(self, input_text, text_length):
         input_text = input_text + "\n\n" + f"请在{text_length}字以内做出回复。"

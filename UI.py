@@ -2,8 +2,8 @@ import sys
 import fitz  # PyMuPDF
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit, QLabel, QVBoxLayout,
                              QWidget, QHBoxLayout, QLineEdit, QStackedWidget)
-from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QTextBlockFormat
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QTextBlockFormat, QKeyEvent
+from PyQt6.QtCore import Qt, QEvent
 import re
 from utils import filter_english_and_punctuation
 from llm import OllamaLLM, LanguageProcessor
@@ -16,18 +16,23 @@ FIRST_PAGE = 15
 LAST_PAGE = 306
 FILE_PATH = "THE COMING WAVE.pdf"
 PROCESSED_TEXT_PATH = "processed_texts.json"
-BUTTON_HEIGHT = 40
+BUTTON_HEIGHT = 35
 TEXT_DISPLAY_WIDTH = 900
 
 ENGLISH_FONT = QFont("Georgia")
-ENGLISH_FONT.setPointSize(16)
+ENGLISH_FONT.setPointSize(14)
 ENGLISH_FORMAT = QTextCharFormat()
 ENGLISH_FORMAT.setFont(ENGLISH_FONT)
 
 CHINESE_FONT = QFont("SimHei")
-CHINESE_FONT.setPointSize(16)
+CHINESE_FONT.setPointSize(15)
 CHINESE_FORMAT = QTextCharFormat()
 CHINESE_FORMAT.setFont(CHINESE_FONT)
+
+SUMMARY_FONT = QFont("SimHei")
+SUMMARY_FONT.setPointSize(12)
+SUMMARY_FORMAT = QTextCharFormat()
+SUMMARY_FORMAT.setFont(SUMMARY_FONT)
 RESPONSE_LENGTH = 200
 
 
@@ -161,10 +166,10 @@ class PDFViewer(QMainWindow):
         compare_display_button.clicked.connect(lambda: text_display_widget.setCurrentIndex(2))
         tab_button_layout.addWidget(compare_display_button)
 
-        summary_display_button = QPushButton("中文总结")
-        summary_display_button.setFixedHeight(BUTTON_HEIGHT)
-        summary_display_button.clicked.connect(lambda: text_display_widget.setCurrentIndex(3))
-        tab_button_layout.addWidget(summary_display_button)
+        # summary_display_button = QPushButton("中文总结")
+        # summary_display_button.setFixedHeight(BUTTON_HEIGHT)
+        # summary_display_button.clicked.connect(lambda: text_display_widget.setCurrentIndex(3))
+        # tab_button_layout.addWidget(summary_display_button)
 
         # 将按钮添加到布局
         text_layout.addLayout(tab_button_layout)
@@ -174,7 +179,7 @@ class PDFViewer(QMainWindow):
         self.english_text_display = QTextEdit(self)
         self.english_text_display.setReadOnly(True)
         self.english_text_display.setFixedWidth(self.english_line_width)
-        self.english_text_display.setFontPointSize(13.5)
+        self.english_text_display.setFontPointSize(12)
         self.english_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
         text_display_widget.addWidget(self.english_text_display)
 
@@ -182,7 +187,7 @@ class PDFViewer(QMainWindow):
         self.chinese_text_display = QTextEdit(self)
         self.chinese_text_display.setReadOnly(True)
         self.chinese_text_display.setFixedWidth(self.chinese_line_width)
-        self.chinese_text_display.setFontPointSize(13.5)
+        self.chinese_text_display.setFontPointSize(12)
         self.chinese_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
         text_display_widget.addWidget(self.chinese_text_display)
 
@@ -190,40 +195,49 @@ class PDFViewer(QMainWindow):
         self.compare_text_display = QTextEdit(self)
         self.compare_text_display.setReadOnly(True)
         self.compare_text_display.setFixedWidth(self.chinese_line_width)
-        self.compare_text_display.setFontPointSize(13.5)
+        self.compare_text_display.setFontPointSize(12)
         self.compare_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
         text_display_widget.addWidget(self.compare_text_display)
 
         # 中文总结
+        summary_text_display_label = QLabel("  中文总结")
+        summary_text_display_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        summary_text_display_label.setMinimumWidth(TEXT_DISPLAY_WIDTH)
+        summary_text_display_label.setFixedHeight(30)
+        text_layout.addWidget(summary_text_display_label)
         self.summary_text_display = QTextEdit(self)
         self.summary_text_display.setReadOnly(True)
         self.summary_text_display.setFixedWidth(self.chinese_line_width)
         self.summary_text_display.setFont(CHINESE_FONT)
-        self.summary_text_display.setFontPointSize(14)
+        self.summary_text_display.setFontPointSize(10)
         self.summary_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
-        text_display_widget.addWidget(self.summary_text_display)
+        self.summary_text_display.setFixedHeight(180)
+        text_layout.addWidget(self.summary_text_display)
 
         # 创建按钮布局
         self.page_button_layout = QHBoxLayout()
         self.first_page_button = QPushButton("第一页", self)
         self.first_page_button.setFixedHeight(BUTTON_HEIGHT)
         self.first_page_button.clicked.connect(self.show_first_page)
+        self.page_button_layout.addWidget(self.first_page_button)
 
         self.prev_button = QPushButton("上一页", self)
         self.prev_button.setFixedHeight(BUTTON_HEIGHT)
         self.prev_button.clicked.connect(self.show_prev_page)
+        self.page_button_layout.addWidget(self.prev_button)
+
+        self.page_number_label = QPushButton("", self)
+        self.page_number_label.setFixedHeight(BUTTON_HEIGHT)
+        self.page_button_layout.addWidget(self.page_number_label)
 
         self.next_button = QPushButton("下一页", self)
         self.next_button.setFixedHeight(BUTTON_HEIGHT)
         self.next_button.clicked.connect(self.show_next_page)
+        self.page_button_layout.addWidget(self.next_button)
 
         self.last_page_button = QPushButton("最后一页", self)
         self.last_page_button.setFixedHeight(BUTTON_HEIGHT)
         self.last_page_button.clicked.connect(self.show_last_page)
-
-        self.page_button_layout.addWidget(self.first_page_button)
-        self.page_button_layout.addWidget(self.prev_button)
-        self.page_button_layout.addWidget(self.next_button)
         self.page_button_layout.addWidget(self.last_page_button)
 
         text_layout.addLayout(self.page_button_layout)
@@ -232,26 +246,30 @@ class PDFViewer(QMainWindow):
         chat_layout = QVBoxLayout()
         chat_display_title = QLabel("对话记录")
         chat_display_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chat_display_title.setFixedHeight(35)
         chat_layout.addWidget(chat_display_title)
         self.chat_display = QTextEdit(self)
         self.chat_display.setReadOnly(True)
         self.chat_display.setFixedWidth(self.chat_line_width)
         self.chat_display.setFontPointSize(13)
-        self.chat_display.setMinimumHeight(600)
+        self.chat_display.setFixedHeight(580)
         chat_layout.addWidget(self.chat_display)
         chat_input_title = QLabel("输入")
         chat_input_title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        chat_input_title.setFixedHeight(30)
         chat_layout.addWidget(chat_input_title)
         self.chat_input = QTextEdit(self)
         self.chat_input.setFixedWidth(self.chat_line_width)
+        self.chat_input.setFixedHeight(180)
         self.chat_input.setFontPointSize(15)
-        self.chat_input.setPlaceholderText("输入消息...")
+        self.chat_input.setPlaceholderText("按回车(Enter)发送消息")
+        self.chat_input.installEventFilter(self)
         # self.chat_input.setFontPointSize(13)
-        self.chat_input.setMinimumHeight(200)
+        # self.chat_input.setMinimumHeight(200)
         chat_layout.addWidget(self.chat_input)
-        self.chat_input_button = QPushButton("发送", self)
+        self.chat_input_button = QPushButton("点击此按钮/按回车(Enter)发送消息", self)
         self.chat_input_button.clicked.connect(self.chat)
-        self.chat_input_button.setMinimumHeight(40)
+        self.chat_input_button.setFixedHeight(BUTTON_HEIGHT)
         chat_layout.addWidget(self.chat_input_button)
 
         # 设置文本窗口布局
@@ -261,18 +279,29 @@ class PDFViewer(QMainWindow):
         self.layout.setAlignment(chat_layout, Qt.AlignmentFlag.AlignLeft)
 
         self.show_page(self.current_page)
+        # self.has_LLM_read_this_path = False
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.KeyPress and obj is self.chat_input:
+            if event.key() == Qt.Key.Key_Return and self.chat_input.hasFocus():
+                self.chat()
+        return super().eventFilter(obj, event)
+
+    def set_page_number_label(self):
+        self.page_number_label.setText(f"原书第 {self.current_page + 1} 页")
 
     def chat(self):
         message = self.chat_input.toPlainText().strip()
         if message:
             self.chat_display.append(f'<span style="font-size: 16px;color: red;">你</span>: '
                                      f'<span style="font-size: 16px;color: black;">{message}</span>')
-            self.chat_input.clear()
             reply = self.language_unit.chat(message, RESPONSE_LENGTH)
             self.chat_display.append(f'<span style="font-size: 16px;color: blue;">AI</span>: '
                                      f'<span style="font-size: 16px;color: black;">{reply}</span>')
+            self.chat_input.clear()
 
     def show_page(self, page_index):
+        self.set_page_number_label()
         english_paragraphs = self.document_text.paragraphs[page_index]
         chinese_paragraphs = self.document_text.translated_paragraphs[page_index]
 
@@ -303,7 +332,7 @@ class PDFViewer(QMainWindow):
         summary_cursor = QTextCursor(self.summary_text_display.document())
         summary_cursor.movePosition(QTextCursor.MoveOperation.End)
         self.summary_text_display.clear()
-        summary_cursor.insertText(self.document_text.page_summary_200[page_index], CHINESE_FORMAT)
+        summary_cursor.insertText(self.document_text.page_summary_200[page_index], SUMMARY_FORMAT)
 
     def show_first_page(self):
         if self.current_page != FIRST_PAGE:
