@@ -7,7 +7,7 @@
 git clone https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave.git
 ```
 5. 打开项目，可使用 pycharm settings 中选择 python interpreter, 也可以在 terminal 中输入'python -m venv venv', 来配置 python 环境
-6. 在 terminal 中直接运行 bash install.sh 或逐个键入以下命令
+6. 在 terminal 中直接运行 [bash install.sh](https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave/blob/56b829348c31c1920c2bc5955c9a2a931e6015b9/install.sh) 或逐个键入以下命令
 ```
 python.exe -m pip install --upgrade pip
 pip install setuptools
