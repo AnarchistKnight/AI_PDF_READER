@@ -3,6 +3,7 @@ from utils import replace_multiple_spaces_with_one
 MODEL_CARDS = ["glm4:9b",
                "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder:7b", "qwen2.5-coder:14b",
                "deepseek-coder-v2:16b"]
+import os
 
 
 class OllamaLLM:
@@ -21,8 +22,9 @@ class OllamaLLM:
 
 
 class LanguageProcessor:
-    def __init__(self, llm):
-        self.llm = llm
+    def __init__(self, model_name):
+        os.system(f"ollama pull {model_name}")
+        self.llm = OllamaLLM(model_name=model_name)
         content = ("You are an AI assistant to help reader read the book <<THE COMING WAVE>> written "
                    "by Mustafa Suleymam, a cofounder of DeepMind.")
         self.long_term_history = [{'role': 'system', 'content': content}]

@@ -1,5 +1,6 @@
 import fitz  # PyMuPDF
 import re
+import GPUtil
 
 
 def filter_english_and_punctuation(text):
@@ -52,3 +53,57 @@ def print_with_line_length(text, line_length):
 def replace_multiple_spaces_with_one(text):
     # 使用正则表达式将多个空格替换成单个空格
     return re.sub(r'\s+', ' ', text)
+
+
+def check_integrated_gpu():
+    integrated_gpu = False
+    for device in GPUtil.getGPUs():
+        if device.name.lower() == 'intel':
+            integrated_gpu = True
+            break
+    return integrated_gpu
+
+
+def get_gpu_info():
+    gpus = GPUtil.getGPUs()
+    if not gpus:
+        return None  # 没有找到可用的显卡
+
+    gpu_info = []
+    for gpu in gpus:
+        info = {
+            'name': gpu.name,
+            'memoryTotal': gpu.memoryTotal,
+            'memoryFree': gpu.memoryFree,
+            'memoryUsed': gpu.memoryUsed,
+            'temperature': gpu.temperature,
+        }
+        gpu_info.append(info)
+    return gpu_info
+
+
+def print_gpu_info():
+    has_integrated_gpu = check_integrated_gpu()
+    gpu_info = get_gpu_info()
+
+    print(f"是否有集成显卡: {'是' if has_integrated_gpu else '否'}")
+    print("显卡信息:")
+    for info in gpu_info:
+        print(f"名称: {info['name']}, 显存总量: {info['memoryTotal']} MB, "
+              f"显存已用: {info['memoryUsed']} MB, "
+              f"显存剩余: {info['memoryFree']} MB, "
+              f"温度: {info['temperature']} °C")
+
+
+def get_recommended_llm():
+    model_name = "qwen2.5:0.5b"
+    gpu_info = get_gpu_info()
+    if gpu_info and len(gpu_info) > 0:
+        memory = gpu_info[0]['memoryTotal']
+        if memory > 8192:
+            model_name = "glm4:9b"
+        elif memory > 4096:
+            model_name = "qwen2.5:3b"
+        else:
+            model_name = "qwen2.5:1.5b"
+    return model_name
