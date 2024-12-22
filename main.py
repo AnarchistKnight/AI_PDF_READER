@@ -103,7 +103,7 @@ class DocumentText:
                 self.page_summary_200[page_index] = summary_200
                 summary_300 = language_unit.summarize(self.paragraphs[page_index], 300)
                 self.page_summary_300[page_index] = summary_300
-                self.save()
+        self.save()
 
     def save(self):
         data = {
