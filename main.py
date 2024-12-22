@@ -10,6 +10,7 @@ from llm import LanguageProcessor
 import os
 from tqdm import tqdm
 import json
+from functools import partial
 
 
 FIRST_PAGE = 15
@@ -17,7 +18,7 @@ LAST_PAGE = 306
 FILE_PATH = "THE COMING WAVE.pdf"
 PROCESSED_TEXT_PATH = "processed_texts.json"
 BUTTON_HEIGHT = 35
-TEXT_DISPLAY_WIDTH = 900
+TEXT_DISPLAY_WIDTH = 1100
 
 ENGLISH_FONT = QFont("Georgia")
 ENGLISH_FONT.setPointSize(14)
@@ -34,6 +35,9 @@ SUMMARY_FONT.setPointSize(12)
 SUMMARY_FORMAT = QTextCharFormat()
 SUMMARY_FORMAT.setFont(SUMMARY_FONT)
 RESPONSE_LENGTH = 250
+
+MENU_BUTTON_WIDTH = 50
+MENU_BUTTON_HEIGHT = 100
 
 
 def is_valid_string(s):
@@ -133,7 +137,7 @@ class PDFViewer(QMainWindow):
         self.setGeometry(50, 50, 1400, 900)
 
         self.english_line_width = 700
-        self.chinese_line_width = 600
+        self.chinese_line_width = 400
         self.chat_line_width = 500
         self.current_page = FIRST_PAGE
         self.document_text = DocumentText()
@@ -209,8 +213,39 @@ class PDFViewer(QMainWindow):
         self.summary_text_display.setFont(CHINESE_FONT)
         self.summary_text_display.setFontPointSize(10)
         self.summary_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
-        self.summary_text_display.setFixedHeight(180)
+        self.summary_text_display.setFixedHeight(130)
         text_layout.addWidget(self.summary_text_display)
+
+        chapter1_button = self.create_menu_button(1, "Containment Is Not Possible", 18)
+        chapter2_button = self.create_menu_button(2, "Endless Proliferation", 34)
+        chapter3_button = self.create_menu_button(3, "The Containment Problem", 47)
+        chapter4_button = self.create_menu_button(4, "The Technology of Intelligence", 62)
+        chapter5_button = self.create_menu_button(5, "The Technology of Life", 92)
+        chapter6_button = self.create_menu_button(6, "The Wild Wave", 106)
+        chapter7_button = self.create_menu_button(7, "Four Features of the Coming Wave", 118)
+        chapter8_button = self.create_menu_button(8, "Unstoppable Incentives", 133)
+        chapter9_button = self.create_menu_button(9, "Grand Bargain", 163)
+        chapter10_button = self.create_menu_button(10, "Fragility Amplifiers", 177)
+        chapter11_button = self.create_menu_button(11, "The Future of Nations", 201)
+        chapter12_button = self.create_menu_button(12, "The Dilemma", 224)
+        menu_layer1_layout = QHBoxLayout()
+        menu_layer1_layout.addWidget(chapter1_button)
+        menu_layer1_layout.addWidget(chapter2_button)
+        menu_layer1_layout.addWidget(chapter3_button)
+        menu_layer1_layout.addWidget(chapter4_button)
+        menu_layer2_layout = QHBoxLayout()
+        menu_layer2_layout.addWidget(chapter5_button)
+        menu_layer2_layout.addWidget(chapter6_button)
+        menu_layer2_layout.addWidget(chapter7_button)
+        menu_layer2_layout.addWidget(chapter8_button)
+        menu_layer3_layout = QHBoxLayout()
+        menu_layer3_layout.addWidget(chapter9_button)
+        menu_layer3_layout.addWidget(chapter10_button)
+        menu_layer3_layout.addWidget(chapter11_button)
+        menu_layer3_layout.addWidget(chapter12_button)
+        text_layout.addLayout(menu_layer1_layout)
+        text_layout.addLayout(menu_layer2_layout)
+        text_layout.addLayout(menu_layer3_layout)
 
         # 创建按钮布局
         self.page_button_layout = QHBoxLayout()
@@ -250,7 +285,7 @@ class PDFViewer(QMainWindow):
         self.chat_display.setReadOnly(True)
         self.chat_display.setFixedWidth(self.chat_line_width)
         self.chat_display.setFontPointSize(13)
-        self.chat_display.setFixedHeight(580)
+        self.chat_display.setFixedHeight(520)
         chat_layout.addWidget(self.chat_display)
         chat_input_title = QLabel("输入")
         chat_input_title.setStyleSheet("font-size: 20px; font-weight: bold;")
@@ -258,8 +293,7 @@ class PDFViewer(QMainWindow):
         chat_layout.addWidget(chat_input_title)
         self.chat_input = QTextEdit(self)
         self.chat_input.setFixedWidth(self.chat_line_width)
-        self.chat_input.setFixedHeight(180)
-        self.chat_input.setFontPointSize(15)
+        self.chat_input.setFontPointSize(14)
         self.chat_input.setPlaceholderText("按回车(Enter)发送消息")
         self.chat_input.installEventFilter(self)
         # self.chat_input.setFontPointSize(13)
@@ -278,6 +312,19 @@ class PDFViewer(QMainWindow):
 
         self.show_page(self.current_page)
         self.has_LLM_read_this_path = False
+
+    def create_menu_button(self, chapter_index, chapter_title, page_index):
+        button = QPushButton(f" {chapter_index}-{chapter_title}", self)
+        button.clicked.connect(partial(self.go_to_page, page_index))
+        button.setFixedHeight(30)
+        button.setFixedWidth(int(TEXT_DISPLAY_WIDTH / 4 - 10))
+        button.setStyleSheet("text-align: left;")
+        return button
+
+    def go_to_page(self, page_index):
+        if self.current_page != page_index:
+            self.current_page = page_index
+            self.show_page(page_index)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress and obj is self.chat_input:
