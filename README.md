@@ -3,7 +3,7 @@
 ## 使用示例
 ![image](https://github.com/user-attachments/assets/2d51e7cd-0826-4f6d-8074-0a4083e22e50)
 
-## 安装
+## 安装指引
 1. 首先下载 [Ollama](https://ollama.com/download)
 2. 拉取本项目
 ```
