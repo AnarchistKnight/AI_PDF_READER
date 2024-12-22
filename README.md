@@ -2,9 +2,12 @@
 
 ## 安装
 1. 首先在 https://ollama.com/download 下载 Ollama
-2. git clone 拉去本项目
-3. 打开项目，可使用 pycharm settings 中选择 python interpreter, 也可以在 terminal 中输入'python -m venv venv', 来配置 python 环境
-4. 在 terminal 中直接运行 bash install.sh 或逐个键入以下命令
+2. 拉取本项目
+```
+git clone https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave.git
+```
+5. 打开项目，可使用 pycharm settings 中选择 python interpreter, 也可以在 terminal 中输入'python -m venv venv', 来配置 python 环境
+6. 在 terminal 中直接运行 bash install.sh 或逐个键入以下命令
 ```
 python.exe -m pip install --upgrade pip
 pip install setuptools
