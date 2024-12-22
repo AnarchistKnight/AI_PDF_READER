@@ -40,5 +40,5 @@ ollama pull qwen2.5:latest              # 4.7 GB
 ollama pull x/llama3.2-vision:latest    # 7.9 GB
 ollama pull llava:latest                # 4.7 GB
 ```
-7. 下载 [《The Coming Wave》](https://ia601201.us.archive.org/21/items/the-coming-wave-by-mustafa-suleyman-michael-bhaskar-pdfread.net/The%20Coming%20Wave%20By%20Mustafa%20SuleymanMichael%20Bhaskar-pdfread.net.pdf) 放在项目目录下
+7. 下载 [《The Coming Wave》](https://ia601201.us.archive.org/21/items/the-coming-wave-by-mustafa-suleyman-michael-bhaskar-pdfread.net/The%20Coming%20Wave%20By%20Mustafa%20SuleymanMichael%20Bhaskar-pdfread.net.pdf) 放在项目目录下并重命名为 `THE COMING WAVE.pdf`
 8. 运行 `python main.py`
