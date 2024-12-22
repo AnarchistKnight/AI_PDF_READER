@@ -1,4 +1,4 @@
-本项目为一个简单的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对**全书**或**当前阅读页**直接提问。
+本项是一个适配 [《The Coming Wave》](https://ia601201.us.archive.org/21/items/the-coming-wave-by-mustafa-suleyman-michael-bhaskar-pdfread.net/The%20Coming%20Wave%20By%20Mustafa%20SuleymanMichael%20Bhaskar-pdfread.net.pdf) 的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对**全书**或**当前阅读页**直接提问。
 
 ## 使用示例
 ![image](https://github.com/user-attachments/assets/2d51e7cd-0826-4f6d-8074-0a4083e22e50)
@@ -40,3 +40,5 @@ ollama pull qwen2.5:latest              # 4.7 GB
 ollama pull x/llama3.2-vision:latest    # 7.9 GB
 ollama pull llava:latest                # 4.7 GB
 ```
+7. 下来[《The Coming Wave》](https://ia601201.us.archive.org/21/items/the-coming-wave-by-mustafa-suleyman-michael-bhaskar-pdfread.net/The%20Coming%20Wave%20By%20Mustafa%20SuleymanMichael%20Bhaskar-pdfread.net.pdf) 并放在项目目录下
+8. 运行 `python main.py`
