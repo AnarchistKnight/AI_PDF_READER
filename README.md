@@ -1,4 +1,4 @@
-本项目为专门适配 [<<The Comming Wave>>]{https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave/blob/4c820c8ea4aaa2682cedf4a3df50099248332ba1/THE%20COMING%20WAVE.pdf} 的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对全书或当前阅读页直接提问。
+本项目为专门适配 [《The Comming Wave》]{https://github.com/AnarchistKnight/AI_reader_of_The_Coming_Wave/blob/4c820c8ea4aaa2682cedf4a3df50099248332ba1/THE%20COMING%20WAVE.pdf} 的 AI 阅读器，通过 Ollama 在本地调用大模型来实现智能交互。您可对全书或当前阅读页直接提问。
 
 ## 安装
 1. 首先在 https://ollama.com/download 下载 Ollama
