@@ -2,6 +2,7 @@ import sys
 import fitz  # PyMuPDF
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QTextEdit, QLabel, QVBoxLayout,
                              QWidget, QHBoxLayout, QLineEdit, QStackedWidget)
+from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QTextBlockFormat
 from PyQt6.QtCore import Qt
 import re
 from utils import filter_english_and_punctuation
@@ -17,6 +18,17 @@ FILE_PATH = "THE COMING WAVE.pdf"
 PROCESSED_TEXT_PATH = "processed_texts.json"
 BUTTON_HEIGHT = 40
 TEXT_DISPLAY_WIDTH = 900
+
+ENGLISH_FONT = QFont("Georgia")
+ENGLISH_FONT.setPointSize(16)
+ENGLISH_FORMAT = QTextCharFormat()
+ENGLISH_FORMAT.setFont(ENGLISH_FONT)
+
+CHINESE_FONT = QFont("SimHei")
+CHINESE_FONT.setPointSize(16)
+CHINESE_FORMAT = QTextCharFormat()
+CHINESE_FORMAT.setFont(CHINESE_FONT)
+RESPONSE_LENGTH = 200
 
 
 def is_valid_string(s):
@@ -186,7 +198,8 @@ class PDFViewer(QMainWindow):
         self.summary_text_display = QTextEdit(self)
         self.summary_text_display.setReadOnly(True)
         self.summary_text_display.setFixedWidth(self.chinese_line_width)
-        self.summary_text_display.setFontPointSize(13.5)
+        self.summary_text_display.setFont(CHINESE_FONT)
+        self.summary_text_display.setFontPointSize(14)
         self.summary_text_display.setMinimumWidth(TEXT_DISPLAY_WIDTH)
         text_display_widget.addWidget(self.summary_text_display)
 
@@ -255,27 +268,42 @@ class PDFViewer(QMainWindow):
             self.chat_display.append(f'<span style="font-size: 16px;color: red;">你</span>: '
                                      f'<span style="font-size: 16px;color: black;">{message}</span>')
             self.chat_input.clear()
-            reply = self.language_unit.chat(message)
+            reply = self.language_unit.chat(message, RESPONSE_LENGTH)
             self.chat_display.append(f'<span style="font-size: 16px;color: blue;">AI</span>: '
                                      f'<span style="font-size: 16px;color: black;">{reply}</span>')
 
     def show_page(self, page_index):
-        self.english_text_display.clear()
-        self.chinese_text_display.clear()
-        self.compare_text_display.clear()
-
         english_paragraphs = self.document_text.paragraphs[page_index]
         chinese_paragraphs = self.document_text.translated_paragraphs[page_index]
+
+        self.english_text_display.clear()
+        english_cursor = QTextCursor(self.english_text_display.document())
         for block in english_paragraphs:
-            self.english_text_display.append(block + "\n")
+            english_cursor.movePosition(QTextCursor.MoveOperation.End)
+            english_cursor.insertText(block, ENGLISH_FORMAT)
+            self.english_text_display.append("\n")
+
+        self.chinese_text_display.clear()
+        chinese_cursor = QTextCursor(self.chinese_text_display.document())
         for block in chinese_paragraphs:
-            self.chinese_text_display.append(block + "\n")
+            chinese_cursor.movePosition(QTextCursor.MoveOperation.End)
+            chinese_cursor.insertText(block, CHINESE_FORMAT)
+            self.chinese_text_display.append("\n")
+
+        self.compare_text_display.clear()
+        compare_cursor = QTextCursor(self.compare_text_display.document())
         for english_block, chinese_block in zip(english_paragraphs, chinese_paragraphs):
-            self.compare_text_display.append(english_block + "\n")
-            self.compare_text_display.append(chinese_block)
+            compare_cursor.movePosition(QTextCursor.MoveOperation.End)
+            compare_cursor.insertText(english_block, ENGLISH_FORMAT)
+            self.compare_text_display.append("\n")
+            compare_cursor.movePosition(QTextCursor.MoveOperation.End)
+            compare_cursor.insertText(chinese_block, CHINESE_FORMAT)
             self.compare_text_display.append(f'<span style="font-size: 17px;color: #00cc00;">{"=" * 69}</span>')
-            # self.compare_text_display.append("\n")
-        self.summary_text_display.setText(self.document_text.page_summary_200[page_index])
+
+        summary_cursor = QTextCursor(self.summary_text_display.document())
+        summary_cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.summary_text_display.clear()
+        summary_cursor.insertText(self.document_text.page_summary_200[page_index], CHINESE_FORMAT)
 
     def show_first_page(self):
         if self.current_page != FIRST_PAGE:
